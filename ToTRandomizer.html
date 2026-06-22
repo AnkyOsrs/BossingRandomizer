@@ -57,28 +57,32 @@
     #controls label {
       color:#ff981f;
       text-shadow: 0 1px 0 rgba(0,0,0,0.9);
-      font-size: clamp(11px, 1.4vw, 15px);
+      font-size: 1.4cqw;
       white-space: nowrap;
     }
 
     /* ----- Individual control positions (top/left %, same system as .boss-tile) -----
        Edit these to move each control anywhere on the board. */
     #quadrant-select { top: 67.4%;  left: 44.2%; width: 12%; }
-    #randomize-btn   { top: 51%;  left: 31%; }
-    #complete-btn    { top: 51%;  left: 44%; }
-    #clear-btn       { top: 51%;  left: 60%; }
-    #reset-btn       { top: 59%;  left: 43.3%; }
-    #volume-slider   { top: 92%; left: 45.9%; width: 10%; }
-    #mute-btn        { top: 91.1%; left: 39.6%; }
+    #randomize-btn   { top: 50%;  left: 27.6%; }
+    #complete-btn    { top: 50%;  left: 41.5%; }
+    #clear-btn       { top: 50%;  left: 59.3%; }
+    #reset-btn       { top: 59%;  left: 40.3%; }
+    #volume-slider   { top: 91.1%; left: 45.9%; width: 10%; }
+    #mute-btn        { top: 90%; left: 39.6%; }
+
+    /* All sizing below uses cqw (% of #image-container's width) instead of
+       vw/px/clamp, so buttons scale in lockstep with the board at every
+       size instead of "snapping" to a fixed floor/ceiling. */
 
     #quadrant-select {
       font-family: "RunescapeOS", serif;
-      font-size: clamp(10px, 1.2vw, 13px);
+      font-size: 1.2cqw;
       background: rgba(0,0,0,0.55);
       color:#fff;
-      border: .13vw solid rgb(255 255 255 / 50%);
-      border-radius: .3vw;
-      padding: 0.3vw 1vw;
+      border: 0.13cqw solid rgb(255 255 255 / 50%);
+      border-radius: 0.3cqw;
+      padding: 0.3cqw 1cqw;
       cursor:pointer;
     }
 
@@ -87,27 +91,27 @@
     #clear-btn:focus-visible,
     #complete-btn:focus-visible,
     #reset-btn:focus-visible {
-      outline: .13vw solid rgb(255 255 255 / 50%);
+      outline: 0.13cqw solid rgb(255 255 255 / 50%);
       outline-offset: 2px;
     }
 
     #randomize-btn, #clear-btn, #complete-btn, #reset-btn {
       font-family: "RunescapeOS", serif;
-      font-size: clamp(14px, 1.5vw, 30px);
-      padding: 0.5vw 1vw;
-      border-radius: 6px;
-      border: .13vw solid rgb(144 125 75);
+      font-size: 2.5cqw;
+      padding: 0.5cqw 1cqw;
+      border-radius: 0.4cqw;
+      border: 0.13cqw solid rgb(144 125 75);
       background: linear-gradient(180deg, rgb(72 62 51), rgb(70 61 49));
       color: #ffffff;
       text-shadow: 0 1px 0 rgba(0,0,0,0.9);
       cursor:pointer;
       transition: transform 0.12s ease, box-shadow 0.18s ease, background 0.18s ease, opacity 0.18s ease;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+      box-shadow: 0 0.3cqw 0.7cqw rgba(0,0,0,0.5);
       white-space: nowrap;
     }
 
     #randomize-btn:hover, #clear-btn:hover, #complete-btn:hover, #reset-btn:hover {
-      box-shadow: 0 0 14px rgb(255 196 0);
+      box-shadow: 0 0 1cqw rgb(255 196 0);
       transform: translateY(-1px);
     }
 
@@ -121,7 +125,7 @@
       color: #ffffff;
     }
     #reset-btn:hover {
-      box-shadow: 0 0 14px rgba(255,90,90,0.45);
+      box-shadow: 0 0 1cqw rgba(255,90,90,0.45);
     }
 
     #randomize-btn:disabled {
@@ -137,7 +141,7 @@
       color: #ffffff;
     }
     #clear-btn:hover {
-      box-shadow: 0 0 14px rgba(255,120,90,0.4);
+      box-shadow: 0 0 1cqw rgba(255,120,90,0.4);
     }
 
     /* Mark Complete button — hidden until a roll has landed */
@@ -148,24 +152,24 @@
       display:none;
     }
     #complete-btn:hover {
-      box-shadow: 0 0 14px rgba(60,220,110,0.5);
+      box-shadow: 0 0 1cqw rgba(60,220,110,0.5);
     }
     #complete-btn.visible {
       display:inline-block;
     }
 
     #volume-slider {
-      width: 80px;
+      width: 8cqw;
       cursor: pointer;
       accent-color: #ff981f
     }
 
     #mute-btn {
       font-family: "RunescapeOS", serif;
-      font-size: clamp(10px, 1.3vw, 14px);
-      padding: 5px 10px;
-      border-radius: 6px;
-      border: 1px solid rgba(16,255,91,0.6);
+      font-size: 1.3cqw;
+      padding: 0.5cqw 1cqw;
+      border-radius: 0.4cqw;
+      border: 0.1cqw solid rgba(16,255,91,0.6);
       background: linear-gradient(180deg, rgb(72 62 51), rgb(70 61 49));
       color: #eafff0;
       cursor: pointer;
@@ -182,7 +186,7 @@
       min-height: 1.6em;
       color:#fff1b3;
       font-family:"RunescapeOS", serif;
-      font-size: clamp(14px, 2vw, 36px);
+      font-size: 2cqw;
       text-shadow:
         0 1px 0 rgba(0,0,0,0.9),
         0 0 10px rgba(255,220,90,0.5);
@@ -192,7 +196,9 @@
 
     /* Main image container — fluid, scales between monitor sizes,
        aspect-ratio keeps it locked to the source image proportions
-       so percentage-based tile coordinates always line up. */
+       so percentage-based tile coordinates always line up.
+       container-type lets descendants size off ITS box (cqw) instead
+       of the viewport, which is what keeps buttons in sync while resizing. */
     #image-container {
       position:relative;
       width: min(92vw, 92vh * (1280/720));  /* fills most of the screen on any monitor, keeping the 1280:720 shape */
@@ -205,6 +211,8 @@
       box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
       margin: 0 auto;
       display: block;
+      container-type: inline-size;
+      container-name: board;
     }
 
     /* base tile (ALL bosses) — positioned with % so it scales/moves
@@ -319,73 +327,77 @@
 </head>
 <body>
 
-  <div id="image-container" role="application" aria-label="OSRS Boss Randomizer">
+  <audio id="completion-sound" src="UniqueDrop.mp3" preload="auto"></audio>
 
-    <div id="controls">
-      <select id="quadrant-select">
-        <option value="all">All Bosses</option>
-        <option value="Apprentice">Apprentice</option>
-        <option value="Adept">Adept</option>
-        <option value="Expert">Expert</option>
-        <option value="Master">Master</option>
-      </select>
-      <button id="randomize-btn" type="button" onclick="startRandomize()">Randomize</button>
-      <button id="complete-btn" type="button" onclick="markComplete()">Mark Complete</button>
-      <button id="clear-btn" type="button" onclick="clearChosen()">Clear Selection</button>
-      <button id="reset-btn" type="button" onclick="resetCompleted()">Reset Completed</button>
-      <input type="range" id="volume-slider" min="0" max="100" value="60" />
-      <button id="mute-btn" type="button" onclick="toggleMute()">🔊</button>
+  <div id="board-frame">
+    <div id="image-container" role="application" aria-label="OSRS Boss Randomizer">
+
+      <div id="controls">
+        <select id="quadrant-select">
+          <option value="all">All Bosses</option>
+          <option value="Apprentice">Apprentice</option>
+          <option value="Adept">Adept</option>
+          <option value="Expert">Expert</option>
+          <option value="Master">Master</option>
+        </select>
+        <button id="randomize-btn" type="button" onclick="startRandomize()">Randomize</button>
+        <button id="complete-btn" type="button" onclick="markComplete()">Mark Complete</button>
+        <button id="clear-btn" type="button" onclick="clearChosen()">Clear Selection</button>
+        <button id="reset-btn" type="button" onclick="resetCompleted()">Reset Completed</button>
+        <input type="range" id="volume-slider" min="0" max="100" value="60" />
+        <button id="mute-btn" type="button" onclick="toggleMute()">🔊</button>
+      </div>
+
+      <div id="result-readout" aria-live="polite"></div>
+
+      <!-- boss tiles (click to toggle) -->
+      <div id="Obor" class="boss-tile" onclick="toggleComplete('Obor')"></div>
+      <div id="Bryophyta" class="boss-tile" onclick="toggleComplete('Bryophyta')"></div>
+      <div id="Giant-Mole" class="boss-tile" onclick="toggleComplete('Giant-Mole')"></div>
+      <div id="Scurrius" class="boss-tile" onclick="toggleComplete('Scurrius')"></div>
+      <div id="Sarachnis" class="boss-tile" onclick="toggleComplete('Sarachnis')"></div>
+      <div id="Prime" class="boss-tile" onclick="toggleComplete('Prime')"></div>
+      <div id="Supreme" class="boss-tile" onclick="toggleComplete('Supreme')"></div>
+      <div id="Rex" class="boss-tile" onclick="toggleComplete('Rex')"></div>
+      <div id="KBD" class="boss-tile" onclick="toggleComplete('KBD')"></div>
+      <div id="Amoxliatl" class="boss-tile" onclick="toggleComplete('Amoxliatl')"></div>
+      <div id="Barrows" class="boss-tile" onclick="toggleComplete('Barrows')"></div>
+      <div id="Chaos-Elemental" class="boss-tile" onclick="toggleComplete('Chaos-Elemental')"></div>
+      <div id="Hueycoatl" class="boss-tile" onclick="toggleComplete('Hueycoatl')"></div>
+      <div id="Crazy-Archaeologist" class="boss-tile" onclick="toggleComplete('Crazy-Archaeologist')"></div>
+      <div id="Chaos-Fanatic" class="boss-tile" onclick="toggleComplete('Chaos-Fanatic')"></div>
+      <div id="Deranged-Archaeologist" class="boss-tile" onclick="toggleComplete('Deranged-Archaeologist')"></div>
+      <div id="Royal-Titans" class="boss-tile" onclick="toggleComplete('Royal-Titans')"></div>
+      <div id="Moons" class="boss-tile" onclick="toggleComplete('Moons')"></div>
+      <div id="Scorpia" class="boss-tile" onclick="toggleComplete('Scorpia')"></div>
+      <div id="Zalcano" class="boss-tile" onclick="toggleComplete('Zalcano')"></div>
+      <div id="Kalphite-Queen" class="boss-tile" onclick="toggleComplete('Kalphite-Queen')"></div>
+      <div id="Kreearra" class="boss-tile" onclick="toggleComplete('Kreearra')"></div>
+      <div id="General-Graardor" class="boss-tile" onclick="toggleComplete('General-Graardor')"></div>
+      <div id="Kril-Tsutsaroth" class="boss-tile" onclick="toggleComplete('Kril-Tsutsaroth')"></div>
+      <div id="Commander-Zilyana" class="boss-tile" onclick="toggleComplete('Commander-Zilyana')"></div>
+      <div id="Zulrah" class="boss-tile" onclick="toggleComplete('Zulrah')"></div>
+      <div id="Nex" class="boss-tile" onclick="toggleComplete('Nex')"></div>
+      <div id="Tombs-of-Amascut" class="boss-tile" onclick="toggleComplete('Tombs-of-Amascut')"></div>
+      <div id="Vorkath" class="boss-tile" onclick="toggleComplete('Vorkath')"></div>
+      <div id="Phantom-Muspah" class="boss-tile" onclick="toggleComplete('Phantom-Muspah')"></div>
+      <div id="Nightmare" class="boss-tile" onclick="toggleComplete('Nightmare')"></div>
+      <div id="The-Gauntlet" class="boss-tile" onclick="toggleComplete('The-Gauntlet')"></div>
+      <div id="Doom-of-Mokhaiotl" class="boss-tile" onclick="toggleComplete('Doom-of-Mokhaiotl')"></div>
+      <div id="Chambers-of-Xeric" class="boss-tile" onclick="toggleComplete('Chambers-of-Xeric')"></div>
+      <div id="Callisto" class="boss-tile" onclick="toggleComplete('Callisto')"></div>
+      <div id="Vetion" class="boss-tile" onclick="toggleComplete('Vetion')"></div>
+      <div id="Venenatis" class="boss-tile" onclick="toggleComplete('Venenatis')"></div>
+      <div id="Abyssal-Sire" class="boss-tile" onclick="toggleComplete('Abyssal-Sire')"></div>
+      <div id="Corporeal-Beast" class="boss-tile" onclick="toggleComplete('Corporeal-Beast')"></div>
+      <div id="Duke-Sucellus" class="boss-tile" onclick="toggleComplete('Duke-Sucellus')"></div>
+      <div id="The-Leviathan" class="boss-tile" onclick="toggleComplete('The-Leviathan')"></div>
+      <div id="The-Whisperer" class="boss-tile" onclick="toggleComplete('The-Whisperer')"></div>
+      <div id="Vardorvis" class="boss-tile" onclick="toggleComplete('Vardorvis')"></div>
+      <div id="Yama" class="boss-tile" onclick="toggleComplete('Yama')"></div>
+      <div id="Theatre-of-Blood" class="boss-tile" onclick="toggleComplete('Theatre-of-Blood')"></div>
+      <div id="Brutus" class="boss-tile" onclick="toggleComplete('Brutus')"></div>
     </div>
-
-    <div id="result-readout" aria-live="polite"></div>
-
-    <!-- boss tiles (click to toggle) -->
-    <div id="Obor" class="boss-tile" onclick="toggleComplete('Obor')"></div>
-    <div id="Bryophyta" class="boss-tile" onclick="toggleComplete('Bryophyta')"></div>
-    <div id="Giant-Mole" class="boss-tile" onclick="toggleComplete('Giant-Mole')"></div>
-    <div id="Scurrius" class="boss-tile" onclick="toggleComplete('Scurrius')"></div>
-    <div id="Sarachnis" class="boss-tile" onclick="toggleComplete('Sarachnis')"></div>
-    <div id="Prime" class="boss-tile" onclick="toggleComplete('Prime')"></div>
-    <div id="Supreme" class="boss-tile" onclick="toggleComplete('Supreme')"></div>
-    <div id="Rex" class="boss-tile" onclick="toggleComplete('Rex')"></div>
-    <div id="KBD" class="boss-tile" onclick="toggleComplete('KBD')"></div>
-    <div id="Amoxliatl" class="boss-tile" onclick="toggleComplete('Amoxliatl')"></div>
-    <div id="Barrows" class="boss-tile" onclick="toggleComplete('Barrows')"></div>
-    <div id="Chaos-Elemental" class="boss-tile" onclick="toggleComplete('Chaos-Elemental')"></div>
-    <div id="Hueycoatl" class="boss-tile" onclick="toggleComplete('Hueycoatl')"></div>
-    <div id="Crazy-Archaeologist" class="boss-tile" onclick="toggleComplete('Crazy-Archaeologist')"></div>
-    <div id="Chaos-Fanatic" class="boss-tile" onclick="toggleComplete('Chaos-Fanatic')"></div>
-    <div id="Deranged-Archaeologist" class="boss-tile" onclick="toggleComplete('Deranged-Archaeologist')"></div>
-    <div id="Royal-Titans" class="boss-tile" onclick="toggleComplete('Royal-Titans')"></div>
-    <div id="Moons" class="boss-tile" onclick="toggleComplete('Moons')"></div>
-    <div id="Scorpia" class="boss-tile" onclick="toggleComplete('Scorpia')"></div>
-    <div id="Zalcano" class="boss-tile" onclick="toggleComplete('Zalcano')"></div>
-    <div id="Kalphite-Queen" class="boss-tile" onclick="toggleComplete('Kalphite-Queen')"></div>
-    <div id="Kreearra" class="boss-tile" onclick="toggleComplete('Kreearra')"></div>
-    <div id="General-Graardor" class="boss-tile" onclick="toggleComplete('General-Graardor')"></div>
-    <div id="Kril-Tsutsaroth" class="boss-tile" onclick="toggleComplete('Kril-Tsutsaroth')"></div>
-    <div id="Commander-Zilyana" class="boss-tile" onclick="toggleComplete('Commander-Zilyana')"></div>
-    <div id="Zulrah" class="boss-tile" onclick="toggleComplete('Zulrah')"></div>
-    <div id="Nex" class="boss-tile" onclick="toggleComplete('Nex')"></div>
-    <div id="Tombs-of-Amascut" class="boss-tile" onclick="toggleComplete('Tombs-of-Amascut')"></div>
-    <div id="Vorkath" class="boss-tile" onclick="toggleComplete('Vorkath')"></div>
-    <div id="Phantom-Muspah" class="boss-tile" onclick="toggleComplete('Phantom-Muspah')"></div>
-    <div id="Nightmare" class="boss-tile" onclick="toggleComplete('Nightmare')"></div>
-    <div id="The-Gauntlet" class="boss-tile" onclick="toggleComplete('The-Gauntlet')"></div>
-    <div id="Doom-of-Mokhaiotl" class="boss-tile" onclick="toggleComplete('Doom-of-Mokhaiotl')"></div>
-    <div id="Chambers-of-Xeric" class="boss-tile" onclick="toggleComplete('Chambers-of-Xeric')"></div>
-    <div id="Callisto" class="boss-tile" onclick="toggleComplete('Callisto')"></div>
-    <div id="Vetion" class="boss-tile" onclick="toggleComplete('Vetion')"></div>
-    <div id="Venenatis" class="boss-tile" onclick="toggleComplete('Venenatis')"></div>
-    <div id="Abyssal-Sire" class="boss-tile" onclick="toggleComplete('Abyssal-Sire')"></div>
-    <div id="Corporeal-Beast" class="boss-tile" onclick="toggleComplete('Corporeal-Beast')"></div>
-    <div id="Duke-Sucellus" class="boss-tile" onclick="toggleComplete('Duke-Sucellus')"></div>
-    <div id="The-Leviathan" class="boss-tile" onclick="toggleComplete('The-Leviathan')"></div>
-    <div id="The-Whisperer" class="boss-tile" onclick="toggleComplete('The-Whisperer')"></div>
-    <div id="Vardorvis" class="boss-tile" onclick="toggleComplete('Vardorvis')"></div>
-    <div id="Yama" class="boss-tile" onclick="toggleComplete('Yama')"></div>
-    <div id="Theatre-of-Blood" class="boss-tile" onclick="toggleComplete('Theatre-of-Blood')"></div>
-    <div id="Brutus" class="boss-tile" onclick="toggleComplete('Brutus')"></div>
   </div>
 
   <script>

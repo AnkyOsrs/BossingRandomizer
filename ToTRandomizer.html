@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>OSRS Boss Randomizer</title>
+
+  <!-- Use the uploaded TTF (put runescape_bold.ttf in same folder as this HTML) -->
+  <style>
+    @font-face {
+      font-family: "RunescapeOS";
+      src: url("runescape_bold.ttf") format("truetype");
+      font-weight: normal;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    :root{
+      --image-w: 1280;   /* native pixel width of the source PNG */
+      --image-h: 720;    /* native pixel height of the source PNG */
+    }
+
+    *{ box-sizing: border-box; }
+
+    body{
+      margin:0;
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      background:#222;
+      font-family: "RunescapeOS", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      padding:20px;
+      gap:16px;
+    }
+
+    /* ===== Controls — now positioned ON the board (like boss tiles),
+       so each control scales/moves with the image and stays aligned at any resolution.
+       Edit the top/left % values below to move each one individually. ===== */
+    #controls {
+      position:absolute;
+      top: 0%;
+      left: 0%;
+      width: 100%;
+      height: 100%;
+      z-index: 1800;
+      pointer-events: none; /* let clicks fall through to tiles except on actual controls */
+      font-family: "RunescapeOS", serif;
+    }
+
+    #controls > * {
+      position: absolute;
+      pointer-events: auto; /* re-enable clicks on the actual controls */
+    }
+
+    #controls label {
+      color:#ff981f;
+      text-shadow: 0 1px 0 rgba(0,0,0,0.9);
+      font-size: clamp(11px, 1.4vw, 15px);
+      white-space: nowrap;
+    }
+
+    /* ----- Individual control positions (top/left %, same system as .boss-tile) -----
+       Edit these to move each control anywhere on the board. */
+    #quadrant-select { top: 67.4%;  left: 44.2%; width: 12%; }
+    #randomize-btn   { top: 51%;  left: 31%; }
+    #complete-btn    { top: 51%;  left: 44%; }
+    #clear-btn       { top: 51%;  left: 60%; }
+    #reset-btn       { top: 59%;  left: 43.3%; }
+    #volume-slider   { top: 92%; left: 45.9%; width: 10%; }
+    #mute-btn        { top: 91.1%; left: 39.6%; }
+
+    #quadrant-select {
+      font-family: "RunescapeOS", serif;
+      font-size: clamp(10px, 1.2vw, 13px);
+      background: rgba(0,0,0,0.55);
+      color:#fff;
+      border: .13vw solid rgb(255 255 255 / 50%);
+      border-radius: .3vw;
+      padding: 0.3vw 1vw;
+      cursor:pointer;
+    }
+
+    #quadrant-select:focus-visible,
+    #randomize-btn:focus-visible,
+    #clear-btn:focus-visible,
+    #complete-btn:focus-visible,
+    #reset-btn:focus-visible {
+      outline: .13vw solid rgb(255 255 255 / 50%);
+      outline-offset: 2px;
+    }
+
+    #randomize-btn, #clear-btn, #complete-btn, #reset-btn {
+      font-family: "RunescapeOS", serif;
+      font-size: clamp(14px, 1.5vw, 30px);
+      padding: 0.5vw 1vw;
+      border-radius: 6px;
+      border: .13vw solid rgb(144 125 75);
+      background: linear-gradient(180deg, rgb(72 62 51), rgb(70 61 49));
+      color: #ffffff;
+      text-shadow: 0 1px 0 rgba(0,0,0,0.9);
+      cursor:pointer;
+      transition: transform 0.12s ease, box-shadow 0.18s ease, background 0.18s ease, opacity 0.18s ease;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+      white-space: nowrap;
+    }
+
+    #randomize-btn:hover, #clear-btn:hover, #complete-btn:hover, #reset-btn:hover {
+      box-shadow: 0 0 14px rgb(255 196 0);
+      transform: translateY(-1px);
+    }
+
+    #randomize-btn:active, #clear-btn:active, #complete-btn:active, #reset-btn:active {
+      transform: translateY(0px) scale(0.97);
+    }
+
+    #reset-btn {
+      border-color: rgba(255,90,90,0.7);
+      background: linear-gradient(180deg, rgb(72 62 51), rgb(70 61 49));
+      color: #ffffff;
+    }
+    #reset-btn:hover {
+      box-shadow: 0 0 14px rgba(255,90,90,0.45);
+    }
+
+    #randomize-btn:disabled {
+      opacity:0.5;
+      cursor:not-allowed;
+      transform:none;
+      box-shadow:none;
+    }
+
+    #clear-btn {
+      border-color: rgba(255,120,90,0.6);
+      background: linear-gradient(180deg, rgb(72 62 51), rgb(70 61 49));
+      color: #ffffff;
+    }
+    #clear-btn:hover {
+      box-shadow: 0 0 14px rgba(255,120,90,0.4);
+    }
+
+    /* Mark Complete button — hidden until a roll has landed */
+    #complete-btn {
+      border-color: rgb(16 255 91 / 36%);
+      background: linear-gradient(180deg, rgb(72 62 51), rgb(70 61 49));
+      color: #ffffff;
+      display:none;
+    }
+    #complete-btn:hover {
+      box-shadow: 0 0 14px rgba(60,220,110,0.5);
+    }
+    #complete-btn.visible {
+      display:inline-block;
+    }
+
+    #volume-slider {
+      width: 80px;
+      cursor: pointer;
+      accent-color: #ff981f
+    }
+
+    #mute-btn {
+      font-family: "RunescapeOS", serif;
+      font-size: clamp(10px, 1.3vw, 14px);
+      padding: 5px 10px;
+      border-radius: 6px;
+      border: 1px solid rgba(16,255,91,0.6);
+      background: linear-gradient(180deg, rgb(72 62 51), rgb(70 61 49));
+      color: #eafff0;
+      cursor: pointer;
+    }
+
+    /* Result readout — now an overlay positioned on the board, same % system */
+    #result-readout {
+      position:absolute;
+      top: 43%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60%;
+      text-align:center;
+      min-height: 1.6em;
+      color:#fff1b3;
+      font-family:"RunescapeOS", serif;
+      font-size: clamp(14px, 2vw, 36px);
+      text-shadow:
+        0 1px 0 rgba(0,0,0,0.9),
+        0 0 10px rgba(255,220,90,0.5);
+      pointer-events: none;
+      z-index: 1750;
+    }
+
+    /* Main image container — fluid, scales between monitor sizes,
+       aspect-ratio keeps it locked to the source image proportions
+       so percentage-based tile coordinates always line up. */
+    #image-container {
+      position:relative;
+      width: min(92vw, 92vh * (1280/720));  /* fills most of the screen on any monitor, keeping the 1280:720 shape */
+      max-width: 2400px;   /* cap upscaling on very large/4K monitors so it doesn't get too soft */
+      aspect-ratio: 1280 / 720;
+      background-image: url('OSRS_Bossing_Randomizer.png');
+      background-size: 100% 100%;
+      background-repeat: no-repeat;
+      background-position: center;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+      margin: 0 auto;
+      display: block;
+    }
+
+    /* base tile (ALL bosses) — positioned with % so it scales/moves
+       with the image at any container size */
+    .boss-tile {
+      position:absolute;
+      cursor:pointer;
+      background-color: transparent;
+      transition: box-shadow 0.18s ease, transform 0.12s, background-color 0.15s ease;
+      overflow:hidden;
+      z-index:1200;
+
+      transform: translate(0px, 1px) scale(1.08);   /* nudge ALL tiles: first two numbers = left/right, up/down (px). scale = size. */
+      transform-origin: center;
+      clip-path: polygon(9.5% 0%, 91% 0%, 91.3% 5%, 95% 5.1%, 95.3% 9%, 95% 9%, 100% 9.4%,100% 91%, 95% 91%, 95% 95%, 91% 95%, 91% 100%, 9% 100%, 9% 95%, 6.5% 95%, 6.5% 91%, 0.5% 91%, 0.5% 9.5%, 6.5% 9.5%, 6.5% 6%, 9.5% 6%);
+    }
+
+    /* hover for normal tiles */
+    .boss-tile:hover {
+      box-shadow: 0 0 12px rgba(180, 180, 180, 0.25);
+      background-color: rgba(180, 180, 180, 0.08);
+    }
+
+    /* click feel */
+    .boss-tile:active {
+      transform: translate(0px, 0px) scale(1.11);  /* keep translate matching the base rule above */
+    }
+
+    /* ===== Randomizer rolling state — tile being "considered" during the roll ===== */
+    .boss-tile.rolling {
+      box-shadow: 0 0 18px 4px rgba(255, 220, 90, 0.85);
+      background-color: rgba(255, 220, 90, 0.22);
+      transform: translate(0px, 1px) scale(1.14);
+    }
+
+    /* ===== Final chosen tile — distinct gold highlight ===== */
+    .boss-tile.chosen {
+      box-shadow:
+        0 0 0 3px rgb(255 255 255 / 18%) inset, 0 0 22px 6px rgb(255 185 9 / 70%);
+      background: radial-gradient(circle, rgb(255 220 120 / 0%), rgb(255 200 60 / 15%));
+      animation: chosen-pulse 1500ms ease-in-out infinite alternate;
+    }
+
+    @keyframes chosen-pulse {
+      from { filter: drop-shadow(0 0 6px rgba(255,220,90,0.6)); }
+      to   { filter: drop-shadow(0 0 16px rgba(255,200,60,0.9)); }
+    }
+
+    /* ===== Completed tile — green highlight, separate from "chosen" gold ===== */
+    .boss-tile.tile-complete {
+      box-shadow:
+        0 0 0 3px rgb(255 255 255 / 7%) inset, 0 0 18px 5px rgb(255 255 255 / 13%);
+      background: radial-gradient(circle, rgb(16 255 91 / 0%), rgb(16 255 91 / 20%));
+      animation: none;
+    }
+
+    /* ===== Tile coordinates — % of image (1280x720), measured directly
+       from the source PNG's tile-grid pixels for pixel-accurate placement ===== */
+    /* row 0 */
+    #Obor { top: 4.028%; left: 24.344%; width: 6.484%; height: 11.528%; }
+    #Bryophyta { top: 4.028%; left: 9.609%; width: 6.484%; height: 11.528%; }
+    #Giant-Mole { top: 4.028%; left: 16.953%; width: 6.484%; height: 11.528%; }
+    #Scurrius { top: 30.328%; left: 24.297%; width: 6.484%; height: 11.528%; }
+    #Sarachnis { top: 4.028%; left: 31.641%; width: 6.484%; height: 11.528%; }
+    #Prime { top: 4.028%; left: 61.797%; width: 6.484%; height: 11.528%; }
+    #Supreme { top: 4.028%; left: 69.141%; width: 6.484%; height: 11.528%; }
+    #Rex { top: 4.028%; left: 76.484%; width: 6.484%; height: 11.528%; }
+       /* row 1 */
+    #KBD { top: 4.083%; left: 83.744%; width: 6.484%; height: 11.528%; }
+    #Amoxliatl { top: 17.083%; left: 9.609%; width: 6.484%; height: 11.528%; }
+    #Barrows { top: 17.083%; left: 31.641%; width: 6.484%; height: 11.528%; }
+    #Chaos-Elemental { top: 17.083%; left: 61.797%; width: 6.484%; height: 11.528%; }
+    #Hueycoatl { top: 17.083%; left: 83.75%; width: 6.484%; height: 11.528%; }
+      /* row 2 */
+    #Deranged-Archaeologist { top: 30.139%; left: 2.344%; width: 6.484%; height: 11.528%; }
+    #Chaos-Fanatic { top: 30.139%; left: 9.609%; width: 6.484%; height: 11.528%; }
+    #Crazy-Archaeologist { top: 30.139%; left: 16.953%; width: 6.484%; height: 11.528%; }
+    #Royal-Titans { top: 30.139%; left: 91.097%; width: 6.484%; height: 11.528%; }
+    #Moons { top: 30.139%; left: 69.141%; width: 6.484%; height: 11.528%; }
+    #Brutus { top: 30.139%; left: 31.684%; width: 6.584%; height: 11.489%; }
+    #Scorpia { top: 30.139%; left: 61.797%; width: 6.484%; height: 11.528%; }
+    #Zalcano { top: 30.139%; left: 76.484%; width: 6.484%; height: 11.528%; }
+    #Kalphite-Queen { top: 30.139%; left: 83.716%; width: 6.484%; height: 11.528%; }
+    /* row 4 */
+    #Kreearra { top: 71.156%; left: 2.344%; width: 6.484%; height: 11.528%; }
+    #General-Graardor { top: 58.056%; left: 9.609%; width: 6.484%; height: 11.528%; }
+    #Kril-Tsutsaroth { top: 58.056%; left: 16.953%; width: 6.484%; height: 11.528%; }
+    #Commander-Zilyana { top: 58.056%; left: 24.297%; width: 6.484%; height: 11.528%; }
+    #Zulrah { top: 58.056%; left: 31.641%; width: 6.484%; height: 11.528%; }
+    #Nex { top: 58.056%; left: 83.75%; width: 6.484%; height: 11.528%; }
+    #Tombs-of-Amascut { top: 57.956%; left: 61.716%; width: 6.484%; height: 11.528%; }
+    /* row 5 */
+    #Vorkath { top: 71.111%; left: 31.744%; width: 6.484%; height: 11.528%; }
+    #Phantom-Muspah { top: 71.111%; left: 9.609%; width: 6.484%; height: 11.528%; }
+    #Nightmare { top: 71.111%; left: 91.031%; width: 6.406%; height: 11.389%; }
+    #The-Gauntlet { top: 71.111%; left: 61.797%; width: 6.484%; height: 11.389%; }
+    #Doom-of-Mokhaiotl { top: 71.111%; left: 83.75%; width: 6.484%; height: 11.389%; }
+    #Chambers-of-Xeric { top: 58.111%; left: 69.116%; width: 6.484%; height: 11.389%; }
+    /* row 6 */
+    #Callisto { top: 84.128%; left: 2.344%; width: 6.484%; height: 11.528%; }
+    #Vetion { top: 84.028%; left: 9.609%; width: 6.484%; height: 11.528%; }
+    #Venenatis { top: 84.028%; left: 16.953%; width: 6.484%; height: 11.528%; }
+    #Abyssal-Sire { top: 84.028%; left: 31.641%; width: 6.484%; height: 11.528%; }
+    #Corporeal-Beast { top: 84.028%; left: 24.384%; width: 6.484%; height: 11.528%; }
+    #Duke-Sucellus { top: 84.028%; left: 83.831%; width: 6.406%; height: 11.528%; }
+    #The-Leviathan { top: 84.028%; left: 61.797%; width: 6.484%; height: 11.528%; }
+    #The-Whisperer { top: 84.028%; left: 69.141%; width: 6.484%; height: 11.667%; }
+    #Vardorvis { top: 84.028%; left: 76.484%; width: 6.484%; height: 11.528%; }
+    #Yama { top: 84.028%; left: 91.15%; width: 6.406%; height: 11.528%; }
+    #Theatre-of-Blood { top: 57.928%; left: 76.416%; width: 6.484%; height: 11.528%; }
+  </style>
+</head>
+<body>
+
+  <div id="image-container" role="application" aria-label="OSRS Boss Randomizer">
+
+    <div id="controls">
+      <select id="quadrant-select">
+        <option value="all">All Bosses</option>
+        <option value="Apprentice">Apprentice</option>
+        <option value="Adept">Adept</option>
+        <option value="Expert">Expert</option>
+        <option value="Master">Master</option>
+      </select>
+      <button id="randomize-btn" type="button" onclick="startRandomize()">Randomize</button>
+      <button id="complete-btn" type="button" onclick="markComplete()">Mark Complete</button>
+      <button id="clear-btn" type="button" onclick="clearChosen()">Clear Selection</button>
+      <button id="reset-btn" type="button" onclick="resetCompleted()">Reset Completed</button>
+      <input type="range" id="volume-slider" min="0" max="100" value="60" />
+      <button id="mute-btn" type="button" onclick="toggleMute()">🔊</button>
+    </div>
+
+    <div id="result-readout" aria-live="polite"></div>
+
+    <!-- boss tiles (click to toggle) -->
+    <div id="Obor" class="boss-tile" onclick="toggleComplete('Obor')"></div>
+    <div id="Bryophyta" class="boss-tile" onclick="toggleComplete('Bryophyta')"></div>
+    <div id="Giant-Mole" class="boss-tile" onclick="toggleComplete('Giant-Mole')"></div>
+    <div id="Scurrius" class="boss-tile" onclick="toggleComplete('Scurrius')"></div>
+    <div id="Sarachnis" class="boss-tile" onclick="toggleComplete('Sarachnis')"></div>
+    <div id="Prime" class="boss-tile" onclick="toggleComplete('Prime')"></div>
+    <div id="Supreme" class="boss-tile" onclick="toggleComplete('Supreme')"></div>
+    <div id="Rex" class="boss-tile" onclick="toggleComplete('Rex')"></div>
+    <div id="KBD" class="boss-tile" onclick="toggleComplete('KBD')"></div>
+    <div id="Amoxliatl" class="boss-tile" onclick="toggleComplete('Amoxliatl')"></div>
+    <div id="Barrows" class="boss-tile" onclick="toggleComplete('Barrows')"></div>
+    <div id="Chaos-Elemental" class="boss-tile" onclick="toggleComplete('Chaos-Elemental')"></div>
+    <div id="Hueycoatl" class="boss-tile" onclick="toggleComplete('Hueycoatl')"></div>
+    <div id="Crazy-Archaeologist" class="boss-tile" onclick="toggleComplete('Crazy-Archaeologist')"></div>
+    <div id="Chaos-Fanatic" class="boss-tile" onclick="toggleComplete('Chaos-Fanatic')"></div>
+    <div id="Deranged-Archaeologist" class="boss-tile" onclick="toggleComplete('Deranged-Archaeologist')"></div>
+    <div id="Royal-Titans" class="boss-tile" onclick="toggleComplete('Royal-Titans')"></div>
+    <div id="Moons" class="boss-tile" onclick="toggleComplete('Moons')"></div>
+    <div id="Scorpia" class="boss-tile" onclick="toggleComplete('Scorpia')"></div>
+    <div id="Zalcano" class="boss-tile" onclick="toggleComplete('Zalcano')"></div>
+    <div id="Kalphite-Queen" class="boss-tile" onclick="toggleComplete('Kalphite-Queen')"></div>
+    <div id="Kreearra" class="boss-tile" onclick="toggleComplete('Kreearra')"></div>
+    <div id="General-Graardor" class="boss-tile" onclick="toggleComplete('General-Graardor')"></div>
+    <div id="Kril-Tsutsaroth" class="boss-tile" onclick="toggleComplete('Kril-Tsutsaroth')"></div>
+    <div id="Commander-Zilyana" class="boss-tile" onclick="toggleComplete('Commander-Zilyana')"></div>
+    <div id="Zulrah" class="boss-tile" onclick="toggleComplete('Zulrah')"></div>
+    <div id="Nex" class="boss-tile" onclick="toggleComplete('Nex')"></div>
+    <div id="Tombs-of-Amascut" class="boss-tile" onclick="toggleComplete('Tombs-of-Amascut')"></div>
+    <div id="Vorkath" class="boss-tile" onclick="toggleComplete('Vorkath')"></div>
+    <div id="Phantom-Muspah" class="boss-tile" onclick="toggleComplete('Phantom-Muspah')"></div>
+    <div id="Nightmare" class="boss-tile" onclick="toggleComplete('Nightmare')"></div>
+    <div id="The-Gauntlet" class="boss-tile" onclick="toggleComplete('The-Gauntlet')"></div>
+    <div id="Doom-of-Mokhaiotl" class="boss-tile" onclick="toggleComplete('Doom-of-Mokhaiotl')"></div>
+    <div id="Chambers-of-Xeric" class="boss-tile" onclick="toggleComplete('Chambers-of-Xeric')"></div>
+    <div id="Callisto" class="boss-tile" onclick="toggleComplete('Callisto')"></div>
+    <div id="Vetion" class="boss-tile" onclick="toggleComplete('Vetion')"></div>
+    <div id="Venenatis" class="boss-tile" onclick="toggleComplete('Venenatis')"></div>
+    <div id="Abyssal-Sire" class="boss-tile" onclick="toggleComplete('Abyssal-Sire')"></div>
+    <div id="Corporeal-Beast" class="boss-tile" onclick="toggleComplete('Corporeal-Beast')"></div>
+    <div id="Duke-Sucellus" class="boss-tile" onclick="toggleComplete('Duke-Sucellus')"></div>
+    <div id="The-Leviathan" class="boss-tile" onclick="toggleComplete('The-Leviathan')"></div>
+    <div id="The-Whisperer" class="boss-tile" onclick="toggleComplete('The-Whisperer')"></div>
+    <div id="Vardorvis" class="boss-tile" onclick="toggleComplete('Vardorvis')"></div>
+    <div id="Yama" class="boss-tile" onclick="toggleComplete('Yama')"></div>
+    <div id="Theatre-of-Blood" class="boss-tile" onclick="toggleComplete('Theatre-of-Blood')"></div>
+    <div id="Brutus" class="boss-tile" onclick="toggleComplete('Brutus')"></div>
+  </div>
+
+  <script>
+    // ===== Tier groupings (mapped from each tile's on-screen quadrant:
+    // Apprentice = Top Left, Adept = Top Right, Expert = Bottom Left, Master = Bottom Right) =====
+    const quadrants = {
+      Apprentice: ['Obor','Bryophyta','Giant-Mole','Scurrius','Sarachnis','Amoxliatl','Barrows','Deranged-Archaeologist','Chaos-Fanatic','Crazy-Archaeologist','Brutus'],
+      Adept: ['Prime','Supreme','Rex','KBD','Chaos-Elemental','Hueycoatl','Royal-Titans','Moons','Scorpia','Zalcano','Kalphite-Queen'],
+      Expert: ['Kreearra','General-Graardor','Kril-Tsutsaroth','Commander-Zilyana','Zulrah','Vorkath','Phantom-Muspah','Callisto','Vetion','Venenatis','Abyssal-Sire','Corporeal-Beast'],
+      Master: ['Nex','Tombs-of-Amascut','Nightmare','The-Gauntlet','Doom-of-Mokhaiotl','Chambers-of-Xeric','Duke-Sucellus','The-Leviathan','The-Whisperer','Vardorvis','Yama','Theatre-of-Blood']
+    };
+
+    // full boss list (all tiles), built from the tiers so it always stays in sync
+    const bossTiles = [...quadrants.Apprentice, ...quadrants.Adept, ...quadrants.Expert, ...quadrants.Master];
+
+    const quadrantSelect = document.getElementById('quadrant-select');
+    const randomizeBtn = document.getElementById('randomize-btn');
+    const completeBtn = document.getElementById('complete-btn');
+    const resultReadout = document.getElementById('result-readout');
+    const volumeSlider = document.getElementById('volume-slider');
+    const muteBtn = document.getElementById('mute-btn');
+
+    const storageKey = 'osrsBossRandomizerCompleted_v1';
+
+    let rollTimeoutId = null;
+    let isRolling = false;
+    let currentChosenId = null;
+    let isMuted = false;
+
+    // ===== Synthesized tick sound (Web Audio API) — no external file needed =====
+    let audioCtx = null;
+    function getAudioCtx(){
+      if (!audioCtx) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (AC) audioCtx = new AC();
+      }
+      return audioCtx;
+    }
+
+    function playTick(){
+      const ctx = getAudioCtx();
+      if (!ctx) return;
+      // resume in case the browser suspended it before first user gesture
+      if (ctx.state === 'suspended') ctx.resume().catch(()=>{});
+
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(1000, now);
+      osc.frequency.exponentialRampToValueAtTime(600, now + 0.03);
+
+      const volume = isMuted ? 0 : (volumeSlider.value / 100) * 0.15;
+      gain.gain.setValueAtTime(Math.max(volume, 0.0001), now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.045);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.05);
+    }
+
+    function toggleMute(){
+      isMuted = !isMuted;
+      muteBtn.textContent = isMuted ? '🔇' : '🔊';
+    }
+
+    // ===== Persistence: completed tiles saved per-browser via localStorage =====
+    function saveCompleted(){
+      const completed = [];
+      bossTiles.forEach(id=>{
+        const tile = document.getElementById(id);
+        if (tile && tile.classList.contains('tile-complete')) completed.push(id);
+      });
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(completed));
+      } catch(e){ /* storage unavailable, ignore */ }
+    }
+
+    function loadCompleted(){
+      let completed = [];
+      try {
+        const raw = localStorage.getItem(storageKey);
+        if (raw) completed = JSON.parse(raw);
+      } catch(e){ /* ignore parse/storage errors */ }
+
+      completed.forEach(id=>{
+        const tile = document.getElementById(id);
+        if (tile) tile.classList.add('tile-complete');
+      });
+    }
+
+    // Clicking a tile now does one of two things:
+    //  - if it's already completed (green), clicking it removes the completed state (uncomplete)
+    //  - otherwise, clicking selects it as the "chosen" (gold) tile, same as a roll landing,
+    //    so Mark Complete can be used on a manually-picked tile too
+    function toggleComplete(bossId){
+      if (isRolling) return; // ignore manual clicks mid-roll
+      const tile = document.getElementById(bossId);
+      if(!tile) return;
+
+      if (tile.classList.contains('tile-complete')) {
+        tile.classList.remove('tile-complete');
+        saveCompleted();
+        return;
+      }
+
+      // clear any previous gold selection, then select this tile
+      document.querySelectorAll('.boss-tile.chosen').forEach(el => el.classList.remove('chosen'));
+      tile.classList.add('chosen');
+      currentChosenId = bossId;
+      resultReadout.textContent = bossId.replace(/-/g, ' ');
+      completeBtn.classList.add('visible');
+    }
+
+    function clearChosen(){
+      if (isRolling) return;
+      document.querySelectorAll('.boss-tile.chosen').forEach(el => el.classList.remove('chosen'));
+      document.querySelectorAll('.boss-tile.rolling').forEach(el => el.classList.remove('rolling'));
+      resultReadout.textContent = '';
+      currentChosenId = null;
+      completeBtn.classList.remove('visible');
+      // note: completed (green) tiles are intentionally left alone here —
+      // use "Reset Completed" if you want to clear those too
+    }
+
+    function getPool(){
+      const value = quadrantSelect.value;
+      const base = (value === 'all') ? bossTiles : (quadrants[value] || bossTiles);
+      // exclude bosses already marked complete so they don't get rolled again
+      return base.filter(id => {
+        const tile = document.getElementById(id);
+        return !(tile && tile.classList.contains('tile-complete'));
+      });
+    }
+
+    function startRandomize(){
+      if (isRolling) return;
+
+      const pool = getPool();
+      if (!pool.length) {
+        resultReadout.textContent = 'All bosses in this pool are already completed!';
+        return;
+      }
+
+      // clear any prior chosen/rolling state before starting a new roll
+      // (completed/green tiles are left untouched so progress persists)
+      document.querySelectorAll('.boss-tile.chosen').forEach(el => el.classList.remove('chosen'));
+      document.querySelectorAll('.boss-tile.rolling').forEach(el => el.classList.remove('rolling'));
+      resultReadout.textContent = '';
+      currentChosenId = null;
+      completeBtn.classList.remove('visible');
+
+      isRolling = true;
+      randomizeBtn.disabled = true;
+      quadrantSelect.disabled = true;
+
+      const totalDuration = 2400; // ~2.4s roll, within the 2-3s medium range
+      const startTime = performance.now();
+      let lastTileEl = null;
+
+      // ease-out style step interval: starts fast, slows down near the end
+      function step(){
+        const elapsed = performance.now() - startTime;
+        const progress = Math.min(elapsed / totalDuration, 1);
+
+        if (lastTileEl) lastTileEl.classList.remove('rolling');
+
+        if (progress >= 1){
+          finishRoll(pool);
+          return;
+        }
+
+        const randomId = pool[Math.floor(Math.random() * pool.length)];
+        const tileEl = document.getElementById(randomId);
+        if (tileEl){
+          tileEl.classList.add('rolling');
+          lastTileEl = tileEl;
+          playTick();
+        }
+
+        // interval grows from ~60ms to ~260ms as progress approaches 1 (ease-out)
+        const nextDelay = 60 + (260 - 60) * Math.pow(progress, 2);
+        rollTimeoutId = setTimeout(step, nextDelay);
+      }
+
+      step();
+    }
+
+    function finishRoll(pool){
+      document.querySelectorAll('.boss-tile.rolling').forEach(el => el.classList.remove('rolling'));
+
+      const winnerId = pool[Math.floor(Math.random() * pool.length)];
+      const winnerEl = document.getElementById(winnerId);
+      if (winnerEl) winnerEl.classList.add('chosen');
+      playTick();
+
+      const displayName = winnerId.replace(/-/g, ' ');
+      resultReadout.textContent = `${displayName}`;
+      currentChosenId = winnerId;
+      completeBtn.classList.add('visible');
+
+      isRolling = false;
+      randomizeBtn.disabled = false;
+      quadrantSelect.disabled = false;
+    }
+
+    // mark the currently chosen tile as complete (green), separate from the gold "chosen" pulse.
+    // completed tiles persist across rolls and are saved to this browser's storage.
+    function markComplete(){
+      if (!currentChosenId) return;
+      const tile = document.getElementById(currentChosenId);
+      if (!tile) return;
+      tile.classList.remove('chosen');
+      tile.classList.add('tile-complete');
+      completeBtn.classList.remove('visible');
+      saveCompleted();
+    }
+
+    // clear all completed (green) tiles and wipe saved progress for this browser
+    function resetCompleted(){
+      if (isRolling) return;
+      if (!confirm('Reset all completed bosses? This clears your saved progress on this browser.')) return;
+      document.querySelectorAll('.boss-tile.tile-complete').forEach(el => el.classList.remove('tile-complete'));
+      saveCompleted();
+    }
+
+    // restore previously completed tiles for this browser on page load
+    loadCompleted();
+
+    // keyboard support: allow toggling selected tile with Enter/Space if focused
+    document.querySelectorAll('.boss-tile').forEach(el=>{
+      el.tabIndex = 0;
+      el.addEventListener('keydown', (e)=>{
+        if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); el.click(); }
+      });
+    });
+  </script>
+</body>
+</html>
